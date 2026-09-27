@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="hosting-provider" content="Netlify">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>Votación Oficial | Burger Week Supía 🍔</title>
+    <meta name="description" content="Plataforma oficial de votación para calificar a los mejores restaurantes en el Burger Week Supía. ¡Elige a la mejor hamburguesa!">
+    
+    <meta property="og:title" content="Votación Oficial - Burger Week Supía">
+    <meta property="og:description" content="Califica tus hamburguesas favoritas en el festival gastronómico de Supía.">
+    <meta property="og:type" content="website">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Canvas Confetti CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #ff3b30;
+            --primary-hover: #e02d22;
+            --primary-glow: rgba(255, 59, 48, 0.2);
+            --accent-gold: #f59e0b;
+            --accent-gold-soft: rgba(245, 158, 11, 0.12);
+            
+            --bg-body: #09090b;
+            --card-bg: #141417;
+            --card-border: rgba(255, 255, 255, 0.08);
+            --inner-bg: #1d1d22;
+            --input-bg: #18181c;
+            --text-main: #f4f4f5;
+            --text-muted: #a1a1aa;
+            --text-sub: #d4d4d8;
+            
+            --radius-xl: clamp(20px, 4vw, 28px);
+            --radius-lg: clamp(14px, 3vw, 18px);
+            --radius-md: clamp(10px, 2vw, 12px);
+            
+            --shadow-card: 0 10px 30px -5px rgba(0, 0, 0, 0.4);
+            --transition-smooth: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            --container-max-w: 520px;
+        }
+
+        [data-theme="light"] {
+            --bg-body: #f8fafc;
+            --card-bg: #ffffff;
+            --card-border: rgba(0, 0, 0, 0.08);
+            --inner-bg: #f1f5f9;
+            --input-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --text-sub: #334155;
+            --shadow-card: 0 10px 25px -5px rgba(15, 23, 42, 0.06);
+        }
+
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body { 
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif; 
+            background-color: var(--bg-body); 
+            color: var(--text-main);
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: clamp(12px, 3vw, 32px) clamp(10px, 2.5vw, 20px);
+            transition: background-color 0.3s ease, color 0.3s ease;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .ambient-glow {
+            position: fixed;
+            width: clamp(280px, 50vw, 550px);
+            height: clamp(280px, 50vw, 550px);
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 59, 48, 0.06) 0%, rgba(0,0,0,0) 70%);
+            top: -120px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .main-wrapper {
+            width: 100%;
+            max-width: var(--container-max-w);
+            z-index: 1;
+            position: relative;
+            transition: max-width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .main-wrapper.expanded {
+            --container-max-w: 980px;
+        }
+
+        .top-controls {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+
+        .btn-theme-toggle {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            color: var(--text-main);
+            padding: 8px 16px;
+            border-radius: 100px;
+            font-size: clamp(12px, 2.5vw, 13px);
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: var(--transition-smooth);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .btn-theme-toggle:hover {
+            border-color: var(--primary);
+            transform: translateY(-1px);
+        }
+
+        .container { 
+            background: var(--card-bg);
+            padding: clamp(20px, 4vw, 36px) clamp(16px, 3.5vw, 32px);
+            border-radius: var(--radius-xl); 
+            border: 1px solid var(--card-border);
+            box-shadow: var(--shadow-card);
+            width: 100%;
+        }
+
+        .header { 
+            text-align: center; 
+            margin-bottom: clamp(20px, 4vw, 28px); 
+        }
+
+        .badge-container { 
+            display: flex; 
+            flex-direction: column;
+            align-items: center; 
+            gap: 10px; 
+            margin-bottom: 16px; 
+        }
+
+        .banner-wrapper {
+            background: rgba(0,0,0,0.2);
+            padding: 2px;
+            width: 100%;
+            max-width: 400px;
+            border-radius: 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border: 1px solid var(--card-border);
+        }
+
+        .banner-img {
+            width: 100%;
+            height: auto;
+            max-height: clamp(90px, 18vw, 130px);
+            object-fit: cover;
+            border-radius: 22px;
+            display: block;
+        }
+
+        .qr-location-badge {
+            background: rgba(34, 197, 94, 0.12);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            font-size: clamp(11px, 2.5vw, 13px);
+            font-weight: 700;
+            padding: 6px 16px;
+            border-radius: 100px;
+            display: none;
+            align-items: center;
+            gap: 6px;
+        }
+
+        h1 { 
+            font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+            font-size: clamp(22px, 5vw, 30px); 
+            font-weight: 800;
+            color: var(--text-main); 
+            letter-spacing: -0.5px;
+            line-height: 1.2;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            font-size: clamp(13px, 2.8vw, 14.5px);
+            color: var(--text-muted);
+            line-height: 1.5;
+            font-weight: 500;
+            max-width: 440px;
+            margin: 0 auto;
+        }
+
+        /* PROGRESS CARD */
+        .progress-card {
+            background: var(--inner-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-md);
+            padding: 14px 18px;
+            margin-bottom: 24px;
+            display: none;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: clamp(12px, 2.5vw, 13px);
+            font-weight: 700;
+        }
+
+        .progress-bar-bg {
+            width: 100%;
+            height: 8px;
+            background: rgba(148, 163, 184, 0.2);
+            border-radius: 100px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--accent-gold) 100%);
+            border-radius: 100px;
+            transition: width 0.4s ease;
+        }
+
+        .form-group { 
+            margin-bottom: clamp(18px, 4vw, 24px); 
+        }
+
+        label.titulo-campo { 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px; 
+            font-weight: 700; 
+            font-size: clamp(13px, 2.6vw, 14.5px);
+            color: var(--text-main); 
+        }
+
+        .cedula-container { 
+            display: flex; 
+            gap: 10px; 
+            flex-wrap: wrap;
+        }
+
+        .input-wrapper { 
+            position: relative; 
+            flex: 1 1 200px; 
+            min-width: 0;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 16px;
+            pointer-events: none;
+        }
+
+        input[type="text"] { 
+            width: 100%;
+            padding: 13px 14px 13px 42px; 
+            border: 1px solid var(--card-border); 
+            border-radius: var(--radius-md); 
+            font-size: clamp(14px, 3vw, 15px); 
+            font-family: inherit;
+            font-weight: 600;
+            color: var(--text-main);
+            background-color: var(--input-bg);
+            transition: var(--transition-smooth);
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-glow);
+        }
+
+        .btn-verificar {
+            padding: 0 clamp(16px, 4vw, 24px);
+            height: 46px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            font-weight: 700;
+            font-size: clamp(13px, 2.8vw, 14px);
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            white-space: nowrap;
+            flex: 0 0 auto;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-verificar:hover:not(:disabled) { 
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-reset-cedula {
+            display: none;
+            background: transparent;
+            border: 1px solid var(--card-border);
+            color: var(--text-muted);
+            border-radius: var(--radius-md);
+            padding: 0 16px;
+            height: 46px;
+            font-size: clamp(12px, 2.5vw, 13px);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            flex: 0 0 auto;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-reset-cedula:hover {
+            background: var(--inner-bg);
+            color: var(--text-main);
+        }
+
+        /* RESTAURANTS LIST RESPONSIVE GRID */
+        .lista-hamburguesas {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: clamp(16px, 3.5vw, 22px);
+            opacity: 0.3;
+            filter: blur(1px);
+            pointer-events: none;
+            transition: all 0.4s ease;
+        }
+
+        .lista-hamburguesas.activa {
+            opacity: 1;
+            filter: blur(0);
+            pointer-events: auto;
+        }
+
+        @media (min-width: 680px) {
+            .lista-hamburguesas {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        /* GASTRONOMIC CARD WITH HERO PHOTO BANNER */
+        .tarjeta-hamburguesa { 
+            border: 1px solid var(--card-border); 
+            border-radius: var(--radius-lg); 
+            background: var(--inner-bg);
+            transition: var(--transition-smooth);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow-card);
+            min-height: 100%;
+        }
+
+        .tarjeta-hamburguesa:hover {
+            border-color: rgba(255, 255, 255, 0.18);
+            transform: translateY(-3px);
+        }
+
+        [data-theme="light"] .tarjeta-hamburguesa:hover {
+            border-color: rgba(0, 0, 0, 0.18);
+        }
+
+        /* Hero image header banner inside card */
+        .card-hero-banner {
+            width: 100%;
+            height: clamp(140px, 25vw, 180px);
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+
+        .card-hero-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.7) 100%);
+        }
+
+        #hero-tacabron {
+            background-image: url('https://i.postimg.cc/Rh07PjpP/image-d3e4f547.jpg');
+        }
+        #hero-amoroto {
+            background-image: url('https://i.postimg.cc/dtNZ2JkG/image-61e99560.jpg');
+        }
+        #hero-crepes {
+            background-image: url('https://i.postimg.cc/wBPxbB5P/image-31af58b5.jpg');
+        }
+        #hero-hamburgo {
+            background-image: url('https://i.postimg.cc/LhdH4QQ3/image-643ecab5.jpg');
+        }
+
+        .tarjeta-hamburguesa.bloqueada-qr {
+            opacity: 0.55;
+            filter: grayscale(0.5);
+        }
+
+        .tarjeta-hamburguesa.votada {
+            border-color: rgba(34, 197, 94, 0.4);
+        }
+
+        .status-ribbon {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(34, 197, 94, 0.85);
+            color: #ffffff;
+            font-size: clamp(10px, 2.2vw, 11px);
+            font-weight: 800;
+            padding: 4px 12px;
+            border-radius: 100px;
+            display: none;
+            z-index: 2;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .tarjeta-hamburguesa.votada .status-ribbon { display: inline-flex; }
+
+        .card-content-body {
+            padding: clamp(14px, 3vw, 18px);
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            justify-content: space-between;
+        }
+
+        .info-comercio { 
+            display: flex; 
+            gap: clamp(10px, 2.5vw, 14px); 
+            align-items: flex-start; 
+            margin-bottom: 12px; 
+        }
+
+        .img-container {
+            width: clamp(52px, 12vw, 64px); 
+            height: clamp(52px, 12vw, 64px);
+            border-radius: var(--radius-md); 
+            overflow: hidden;
+            flex-shrink: 0;
+            background: var(--card-bg);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            margin-top: -30px;
+            z-index: 2;
+            position: relative;
+        }
+
+        .info-comercio img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+        }
+
+        .detalles {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .detalles h3 { 
+            margin: 0 0 2px 0; 
+            font-family: 'Outfit', sans-serif;
+            font-size: clamp(16px, 3.5vw, 18px); 
+            font-weight: 800; 
+            color: var(--text-main);
+            letter-spacing: -0.2px;
+            line-height: 1.25;
+        }
+
+        .detalles h2.subtitulo-burger {
+            font-size: clamp(11px, 2.4vw, 12px);
+            font-weight: 700;
+            color: var(--accent-gold);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .detalles .box-ingredientes { 
+            font-size: clamp(12px, 2.5vw, 13px); 
+            color: var(--text-muted); 
+            line-height: 1.45; 
+            font-weight: 400;
+        }
+
+        .detalles .box-ingredientes strong {
+            color: var(--text-sub);
+            font-weight: 600;
+        }
+
+        .rating-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px 0 8px;
+            border-top: 1px dashed var(--card-border);
+            margin-top: 10px;
+        }
+
+        .rating-label-display {
+            font-size: clamp(11px, 2.4vw, 12px);
+            font-weight: 700;
+            min-height: 18px;
+            color: var(--accent-gold);
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+        .calificacion-estrellas {
+            display: flex;
+            flex-direction: row-reverse; 
+            justify-content: center; 
+            gap: clamp(4px, 1.8vw, 8px);
+            width: 100%;
+        }
+
+        .calificacion-estrellas input { display: none; }
+
+        .calificacion-estrellas label {
+            font-size: clamp(26px, 7vw, 34px); 
+            color: rgba(255, 255, 255, 255.35);
+            cursor: pointer;
+            transition: transform 0.15s ease, color 0.15s ease;
+            padding: 2px 4px; 
+            touch-action: manipulation;
+        }
+
+        .calificacion-estrellas label:hover,
+        .calificacion-estrellas label:hover ~ label,
+        .calificacion-estrellas input:checked ~ label {
+            color: var(--accent-gold);
+            transform: scale(1.12);
+        }
+
+        .comentario-container {
+            width: 100%;
+            margin-top: 10px;
+            margin-bottom: 4px;
+        }
+
+        .textarea-comentario {
+            width: 100%;
+            height: 58px;
+            padding: 8px 12px;
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-md);
+            background: var(--input-bg);
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: clamp(12px, 2.5vw, 13px);
+            resize: none;
+            transition: var(--transition-smooth);
+        }
+
+        .textarea-comentario::placeholder {
+            color: var(--text-muted);
+            opacity: 0.75;
+        }
+
+        .textarea-comentario:focus {
+            outline: none;
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 0 3px var(--accent-gold-soft);
+        }
+
+        .btn-voto { 
+            width: 100%; 
+            padding: clamp(11px, 2.2vw, 13px); 
+            background: var(--text-main); 
+            color: var(--bg-body); 
+            border: none; 
+            border-radius: var(--radius-md); 
+            font-size: clamp(13px, 2.5vw, 14px); 
+            cursor: pointer; 
+            font-weight: 700; 
+            font-family: inherit;
+            margin-top: 8px; 
+            transition: var(--transition-smooth);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn-voto:hover:not(:disabled) { 
+            background: var(--primary); 
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+
+        .btn-voto:disabled { 
+            background: var(--card-border); 
+            color: var(--text-muted);
+            cursor: not-allowed; 
+            transform: none;
+        }
+
+        /* TOAST NOTIFICATIONS */
+        #toast-container {
+            position: fixed;
+            bottom: max(20px, env(safe-area-inset-bottom));
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: min(92%, 440px);
+            pointer-events: none;
+        }
+
+        .toast {
+            pointer-events: auto;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            padding: 12px 16px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: clamp(12.5px, 2.5vw, 13.5px);
+            font-weight: 600;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            animation: toast-in 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes toast-in {
+            from { transform: translateY(15px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .toast.exito { border-left: 4px solid #22c55e; }
+        .toast.error { border-left: 4px solid #ef4444; }
+        .toast.info { border-left: 4px solid #3b82f6; }
+    </style>
+</head>
+<body data-theme="dark">
+
+<div class="ambient-glow"></div>
+
+<div class="main-wrapper" id="mainWrapper">
+    <div class="top-controls">
+        <button type="button" class="btn-theme-toggle" onclick="toggleTheme()">
+            <span id="themeIcon">🌙</span> <span id="themeLabel">Modo Claro</span>
+        </button>
+    </div>
+	
+    <main class="container">
+        <header class="header"> 
+            <div class="badge-container">
+                <div class="banner-wrapper">
+                    <img src="https://i.postimg.cc/jjTzcG25/image-1edefc78.jpg" 
+                         alt="Burger Week Supía 2026" 
+                         class="banner-img">
+                </div>
+                <span class="qr-location-badge" id="qrLocationBadge">📍 Votando en <strong id="qrLocationName">---</strong></span>
+            </div>
+            <h1>La Mejor Hamburguesa</h1>
+            <p class="subtitle" id="mainSubtitle">Ingresa tu número de cédula para consultar tus calificaciones y votar por tus favoritos.</p>
+        </header>
+        
+        <div class="progress-card" id="progressCard">
+            <div class="progress-header">
+                <span>📊 Tu Progreso de Votación</span>
+                <span id="progressCountText">0 / 4</span>
+            </div>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="progressBarFill"></div>
+            </div>
+        </div>
+
+        <form id="formVotacion" onsubmit="handleFormSubmit(event)">
+            <div class="form-group">
+                <label class="titulo-campo" for="cedula">
+                    <span>Cédula de Ciudadanía</span>
+                </label>
+                <div class="cedula-container">
+                    <div class="input-wrapper">
+                        <span class="input-icon">🪪</span>
+                        <input type="text" id="cedula" placeholder="Ej. 105382910" required pattern="[0-9]{6,10}" maxlength="10" title="Ingrese una cédula de 6 a 10 dígitos" oninput="sanitizeCedulaInput(this)">
+                    </div>
+                    <button type="button" class="btn-verificar" id="btnVerificar" onclick="verificarHistorial()">Verificar</button>
+                    <button type="button" class="btn-reset-cedula" id="btnResetCedula" onclick="resetearCedula()">Cambiar Cédula</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="titulo-campo">Restaurantes Participantes:</label>
+                <div class="lista-hamburguesas" id="listaRestaurantes">
+                    
+                    <!-- Ta'Cabron -->
+                    <article class="tarjeta-hamburguesa" id="card-tacabron">
+                        <span class="status-ribbon">✓ Votado</span>
+                        <div class="card-hero-banner" id="hero-tacabron">
+                            <div class="card-hero-overlay"></div>
+                        </div>
+                        <div class="card-content-body">
+                            <div class="info-comercio">
+                                <div class="img-container">
+                                    <img src="https://i.postimg.cc/8PpHHNcq/Whats-App-Image-2026-09-04-at-9-29-36-PM.jpg" alt="Logo Ta'Cabron" onerror="handleImageError(this)">
+                                </div>
+                                <div class="detalles">
+                                    <h3>TA´CABRON</h3>
+                                    <h2 class="subtitulo-burger">LA JEFA</h2>
+                                    <div class="box-ingredientes">
+                                        <strong>Ingredientes:</strong> Pan brioche artesanal, carne jugosa, tocineta crujiente, lechuga, tomate, queso para asar, cheddar fundido, totopos crunch y salsa Kentucky.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="rating-wrapper">
+                                <span class="rating-label-display" id="label-tacabron">Selecciona una nota</span>
+                                <div class="calificacion-estrellas">
+                                    <input type="radio" id="star5-tacabron" name="voto_tacabron" value="5" onchange="updateStarLabel('tacabron', 5)"><label for="star5-tacabron">★</label>
+                                    <input type="radio" id="star4-tacabron" name="voto_tacabron" value="4" onchange="updateStarLabel('tacabron', 4)"><label for="star4-tacabron">★</label>
+                                    <input type="radio" id="star3-tacabron" name="voto_tacabron" value="3" onchange="updateStarLabel('tacabron', 3)"><label for="star3-tacabron">★</label>
+                                    <input type="radio" id="star2-tacabron" name="voto_tacabron" value="2" onchange="updateStarLabel('tacabron', 2)"><label for="star2-tacabron">★</label>
+                                    <input type="radio" id="star1-tacabron" name="voto_tacabron" value="1" onchange="updateStarLabel('tacabron', 1)"><label for="star1-tacabron">★</label>
+                                </div>
+                                <div class="comentario-container">
+                                    <textarea id="comentario-tacabron" class="textarea-comentario" placeholder="Escribe un comentario o sugerencia (opcional)..."></textarea>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-voto" id="btn-tacabron" onclick="enviarVotoIndividual('tacabron', 'Ta\'Cabron')">Calificar Ta'Cabron</button>
+                        </div>
+                    </article>
+
+                    <!-- Amoroto -->
+                    <article class="tarjeta-hamburguesa" id="card-amoroto">
+                        <span class="status-ribbon">✓ Votado</span>
+                        <div class="card-hero-banner" id="hero-amoroto">
+                            <div class="card-hero-overlay"></div>
+                        </div>
+                        <div class="card-content-body">
+                            <div class="info-comercio">
+                                <div class="img-container">
+                                    <img src="https://i.postimg.cc/X77xn4f0/Logo-con-tagline-amoroto-02.png" alt="Logo Amoroto" onerror="handleImageError(this)">
+                                </div>
+                                <div class="detalles">
+                                    <h3>AMOROTO</h3>
+                                    <h2 class="subtitulo-burger">DIPPED BURGER</h2>
+                                    <div class="box-ingredientes">
+                                        <strong>Ingredientes:</strong> Pan brioche con cheddar, tocineta y salsa fresca de la casa, servida abierta sobre una salsa cremosa caliente tipo veloute.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="rating-wrapper">
+                                <span class="rating-label-display" id="label-amoroto">Selecciona una nota</span>
+                                <div class="calificacion-estrellas">
+                                    <input type="radio" id="star5-amoroto" name="voto_amoroto" value="5" onchange="updateStarLabel('amoroto', 5)"><label for="star5-amoroto">★</label>
+                                    <input type="radio" id="star4-amoroto" name="voto_amoroto" value="4" onchange="updateStarLabel('amoroto', 4)"><label for="star4-amoroto">★</label>
+                                    <input type="radio" id="star3-amoroto" name="voto_amoroto" value="3" onchange="updateStarLabel('amoroto', 3)"><label for="star3-amoroto">★</label>
+                                    <input type="radio" id="star2-amoroto" name="voto_amoroto" value="2" onchange="updateStarLabel('amoroto', 2)"><label for="star2-amoroto">★</label>
+                                    <input type="radio" id="star1-amoroto" name="voto_amoroto" value="1" onchange="updateStarLabel('amoroto', 1)"><label for="star1-amoroto">★</label>
+                                </div>
+                                <div class="comentario-container">
+                                    <textarea id="comentario-amoroto" class="textarea-comentario" placeholder="Escribe un comentario o sugerencia (opcional)..."></textarea>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-voto" id="btn-amoroto" onclick="enviarVotoIndividual('amoroto', 'Amoroto')">Calificar Amoroto</button>
+                        </div>
+                    </article>
+
+                    <!-- Crepes & Sándwich -->
+                    <article class="tarjeta-hamburguesa" id="card-crepes">
+                        <span class="status-ribbon">✓ Votado</span>
+                        <div class="card-hero-banner" id="hero-crepes">
+                            <div class="card-hero-overlay"></div>
+                        </div>
+                        <div class="card-content-body">
+                            <div class="info-comercio">
+                                <div class="img-container">
+                                    <img src="https://i.postimg.cc/5twk6pjD/Whats-App-Image-2026-09-04-at-4-34-01-PM.jpg" alt="Logo Crepes & Sándwich" onerror="handleImageError(this)">
+                                </div>
+                                <div class="detalles">
+                                    <h3>CREPES & SANDWICH</h3>
+                                    <h2 class="subtitulo-burger">LA BANDIDA</h2>
+                                    <div class="box-ingredientes">
+                                        <strong>Ingredientes:</strong> Carne premium, pan brioche, mezclum de lechugas, queso mozarella, peras glaseadas, jamón crocante, dip ahumado y nido crocante.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="rating-wrapper">
+                                <span class="rating-label-display" id="label-crepes">Selecciona una nota</span>
+                                <div class="calificacion-estrellas">
+                                    <input type="radio" id="star5-crepes" name="voto_crepes" value="5" onchange="updateStarLabel('crepes', 5)"><label for="star5-crepes">★</label>
+                                    <input type="radio" id="star4-crepes" name="voto_crepes" value="4" onchange="updateStarLabel('crepes', 4)"><label for="star4-crepes">★</label>
+                                    <input type="radio" id="star3-crepes" name="voto_crepes" value="3" onchange="updateStarLabel('crepes', 3)"><label for="star3-crepes">★</label>
+                                    <input type="radio" id="star2-crepes" name="voto_crepes" value="2" onchange="updateStarLabel('crepes', 2)"><label for="star2-crepes">★</label>
+                                    <input type="radio" id="star1-crepes" name="voto_crepes" value="1" onchange="updateStarLabel('crepes', 1)"><label for="star1-crepes">★</label>
+                                </div>
+                                <div class="comentario-container">
+                                    <textarea id="comentario-crepes" class="textarea-comentario" placeholder="Escribe un comentario o sugerencia (opcional)..."></textarea>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-voto" id="btn-crepes" onclick="enviarVotoIndividual('crepes', 'Crepes & Sándwich')">Calificar Crepes & Sándwich</button>
+                        </div>
+                    </article>
+
+                    <!-- Hamburgo -->
+                    <article class="tarjeta-hamburguesa" id="card-hamburgo">
+                        <span class="status-ribbon">✓ Votado</span>
+                        <div class="card-hero-banner" id="hero-hamburgo">
+                            <div class="card-hero-overlay"></div>
+                        </div>
+                        <div class="card-content-body">
+                            <div class="info-comercio">
+                                <div class="img-container">
+                                    <img src="https://i.postimg.cc/SsLdbwhD/logo-hamburgo-jpg.jpg" alt="Logo Hamburgo" onerror="handleImageError(this)">
+                                </div>
+                                <div class="detalles">
+                                    <h3>HAMBURGO</h3>
+                                    <h2 class="subtitulo-burger">BARICHARA</h2>
+                                    <div class="box-ingredientes">
+                                        <strong>Ingredientes:</strong> Pan parmesano de masa madre, carne artesanal, chutney de mango, tocineta ahumada, queso cottage y mayonesa de trufas.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="rating-wrapper">
+                                <span class="rating-label-display" id="label-hamburgo">Selecciona una nota</span>
+                                <div class="calificacion-estrellas">
+                                    <input type="radio" id="star5-hamburgo" name="voto_hamburgo" value="5" onchange="updateStarLabel('hamburgo', 5)"><label for="star5-hamburgo">★</label>
+                                    <input type="radio" id="star4-hamburgo" name="voto_hamburgo" value="4" onchange="updateStarLabel('hamburgo', 4)"><label for="star4-hamburgo">★</label>
+                                    <input type="radio" id="star3-hamburgo" name="voto_hamburgo" value="3" onchange="updateStarLabel('hamburgo', 3)"><label for="star3-hamburgo">★</label>
+                                    <input type="radio" id="star2-hamburgo" name="voto_hamburgo" value="2" onchange="updateStarLabel('hamburgo', 2)"><label for="star2-hamburgo">★</label>
+                                    <input type="radio" id="star1-hamburgo" name="voto_hamburgo" value="1" onchange="updateStarLabel('hamburgo', 1)"><label for="star1-hamburgo">★</label>
+                                </div>
+                                <div class="comentario-container">
+                                    <textarea id="comentario-hamburgo" class="textarea-comentario" placeholder="Escribe un comentario o sugerencia (opcional)..."></textarea>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-voto" id="btn-hamburgo" onclick="enviarVotoIndividual('hamburgo', 'Hamburgo')">Calificar Hamburgo</button>
+                        </div>
+                    </article>
+
+                </div>
+            </div>
+        </form>
+    </main>
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+    const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxsNEJFgrWpzQwtNL3YW-P9RWG1Lp1enK8Kn2ZXqZLBSSr1rPyqq9naOfR6683WKvHp/exec';
+    
+    // Números de WhatsApp para cada restaurante (incluye código de país)
+    const WHATSAPP_NUMEROS = {
+        'tacabron': '3009924545',
+        'amoroto': '3105557852',
+        'crepes': '3166154897',
+        'hamburgo': '3137917703'
+    };
+
+    const STAR_LABELS = { 1: '1 ★ Deficiente', 2: '2 ★★ Regular', 3: '3 ★★★ Buena', 4: '4 ★★★★ ¡Muy Buena!', 5: '5 ★★★★★ ¡Espectacular!' };
+    
+    const RESTAURANTES_NOMBRES = {
+        'tacabron': "Ta'Cabron",
+        'amoroto': 'Amoroto',
+        'crepes': 'Crepes & Sándwich',
+        'hamburgo': 'Hamburgo'
+    };
+
+    let votosRealizadosCount = 0;
+    const RESTAURANTES_TOTAL = 4;
+    let localActivoQR = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        detectarParametroQR();
+    });
+
+    function detectarParametroQR() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const param = (urlParams.get('local') || urlParams.get('restaurante') || urlParams.get('r') || '').toLowerCase().trim();
+
+        if (param && RESTAURANTES_NOMBRES[param]) {
+            localActivoQR = param;
+            
+            const qrBadge = document.getElementById('qrLocationBadge');
+            const qrName = document.getElementById('qrLocationName');
+            const subtitle = document.getElementById('mainSubtitle');
+
+            if (qrBadge && qrName) {
+                qrName.innerText = RESTAURANTES_NOMBRES[localActivoQR];
+                qrBadge.style.display = 'inline-flex';
+            }
+            if (subtitle) {
+                subtitle.innerText = `Estás votando en ${RESTAURANTES_NOMBRES[localActivoQR]}. Verifica tu cédula para calificar.`;
+            }
+
+            Object.keys(RESTAURANTES_NOMBRES).forEach(id => {
+                const tarjeta = document.getElementById(`card-${id}`);
+                if (tarjeta) {
+                    if (id !== localActivoQR) {
+                        tarjeta.style.display = 'none';
+                    } else {
+                        tarjeta.style.display = 'flex';
+                    }
+                }
+            });
+        }
+    }
+
+    function handleFormSubmit(e) {
+        e.preventDefault();
+        const cedulaInput = document.getElementById('cedula');
+        if (!cedulaInput.disabled) verificarHistorial();
+    }
+
+    function sanitizeCedulaInput(input) {
+        input.value = input.value.replace(/[^0-9]/g, '');
+    }
+
+    function toggleTheme() {
+        const body = document.body;
+        const currentTheme = body.getAttribute('data-theme');
+        const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        body.setAttribute('data-theme', nextTheme);
+        document.getElementById('themeIcon').innerText = nextTheme === 'light' ? '☀️' : '🌙';
+        document.getElementById('themeLabel').innerText = nextTheme === 'light' ? 'Modo Oscuro' : 'Modo Claro';
+    }
+
+    function handleImageError(imgElement) {
+        imgElement.style.display = 'none';
+    }
+
+    function updateStarLabel(idRestaurante, rating) {
+        const labelDisplay = document.getElementById(`label-${idRestaurante}`);
+        if (labelDisplay && STAR_LABELS[rating]) labelDisplay.innerText = STAR_LABELS[rating];
+        if (navigator.vibrate) navigator.vibrate(20);
+    }
+
+    function verificarHistorial() {
+        const cedulaInput = document.getElementById('cedula');
+        const cedula = cedulaInput.value.trim();
+        const btnVerificar = document.getElementById('btnVerificar');
+        const btnReset = document.getElementById('btnResetCedula');
+
+        if (!cedula || !cedulaInput.checkValidity()) {
+            mostrarToast('⚠️ Ingrese una cédula válida (6 a 10 dígitos).', 'error');
+            cedulaInput.focus();
+            return;
+        }
+
+        btnVerificar.disabled = true;
+        btnVerificar.innerText = 'Verificando... ⏳';
+
+        fetch(`${WEB_APP_URL}?action=check&cedula=${cedula}`)
+        .then(res => res.json())
+        .then(data => {
+            btnVerificar.disabled = false;
+            btnVerificar.innerText = 'Verificar';
+
+            if (data.status === "success") {
+                cedulaInput.disabled = true;
+                btnVerificar.style.display = 'none';
+                btnReset.style.display = 'inline-flex';
+                document.getElementById('listaRestaurantes').classList.add('activa');
+                document.getElementById('progressCard').style.display = 'block';
+                
+                // Expande el contenedor para distribución multi-columna en tablet/desktop
+                document.getElementById('mainWrapper').classList.add('expanded');
+
+                mostrarToast('✅ Cédula verificada con éxito.', 'exito');
+
+                votosRealizadosCount = 0;
+                const historial = data.historial || {};
+                
+                ['tacabron', 'amoroto', 'crepes', 'hamburgo'].forEach(idRestaurante => {
+                    const notaGuardada = historial[idRestaurante];
+                    if (notaGuardada && notaGuardada !== "") {
+                        votosRealizadosCount++;
+                        const radioBoton = document.getElementById(`star${notaGuardada}-${idRestaurante}`);
+                        if(radioBoton) {
+                            radioBoton.checked = true;
+                            updateStarLabel(idRestaurante, Number(notaGuardada));
+                        }
+                        deshabilitarTarjeta(idRestaurante, true);
+                    } else {
+                        deshabilitarTarjeta(idRestaurante, false);
+                    }
+                });
+
+                actualizarProgreso();
+            } else {
+                mostrarToast('⚠️ No se pudo obtener el historial.', 'error');
+            }
+        })
+        .catch(err => {
+            btnVerificar.disabled = false;
+            btnVerificar.innerText = 'Verificar';
+            mostrarToast('❌ Error de conexión al verificar.', 'error');
+        });
+    }
+
+    function enviarVotoIndividual(idRestaurante, nombreRestaurante) {
+        if (localActivoQR && idRestaurante !== localActivoQR) {
+            mostrarToast(`⚠️ Solo puedes calificar a ${RESTAURANTES_NOMBRES[localActivoQR]} escaneando su QR en el establecimiento.`, 'error');
+            return;
+        }
+
+        const cedula = document.getElementById('cedula').value.trim();
+        const estrellaSeleccionada = document.querySelector(`input[name="voto_${idRestaurante}"]:checked`);
+        const comentarioInput = document.getElementById(`comentario-${idRestaurante}`);
+        const comentarioTexto = comentarioInput ? comentarioInput.value.trim() : '';
+        
+        if (!estrellaSeleccionada) {
+            mostrarToast(`⚠️ Selecciona estrellas para ${nombreRestaurante}.`, 'error');
+            return;
+        }
+
+        const botonActual = document.getElementById(`btn-${idRestaurante}`);
+        const textoOriginal = botonActual.innerHTML;
+        
+        botonActual.disabled = true;
+        botonActual.innerText = 'Procesando... ⏳';
+
+        const datosEnvio = {
+            action: "vote",
+            cedula: cedula,
+            restaurante: idRestaurante,
+            calificacion: Number(estrellaSeleccionada.value),
+            comentario: comentarioTexto
+        };
+
+        fetch(WEB_APP_URL, {
+            method: 'POST',
+            mode: 'cors',
+            redirect: 'follow',
+            headers: { 'Content-Type': 'text/plain' }, 
+            body: JSON.stringify(datosEnvio)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === "success") {
+                mostrarToast(`🎉 ¡Voto registrado para ${nombreRestaurante}!`, 'exito');
+                deshabilitarTarjeta(idRestaurante, true);
+                votosRealizadosCount++;
+                actualizarProgreso();
+
+                if (typeof confetti === 'function') confetti({ particleCount: 80, spread: 60, origin: { y: 0.7 } });
+
+                // Redirección limpia a WhatsApp
+                const numeroWa = WHATSAPP_NUMEROS[idRestaurante];
+                if (numeroWa && numeroWa !== '573000000000') {
+                    let mensajeWa = `¡Hola! Acabo de calificar a *${nombreRestaurante}* en el Burger Week Supía 🍔\n\n`;
+                    mensajeWa += `⭐ *Calificación:* ${estrellaSeleccionada.value}/5 estrellas\n`;
+                    if (comentarioTexto) {
+                        mensajeWa += `💬 *Comentario:* ${comentarioTexto}\n`;
+                    }
+                    mensajeWa += `🪪 *Cédula:* ${cedula}`;
+
+                    const urlWa = `https://wa.me/${numeroWa}?text=${encodeURIComponent(mensajeWa)}`;
+                    
+                    setTimeout(() => {
+                        window.location.href = urlWa;
+                    }, 1000);
+                }
+            } else {
+                mostrarToast('⚠️ ' + (data.message || 'Error al guardar voto.'), 'error');
+                botonActual.disabled = false;
+                botonActual.innerHTML = textoOriginal;
+            }
+        })
+        .catch(error => {
+            mostrarToast('❌ Error de conexión.', 'error');
+            botonActual.disabled = false;
+            botonActual.innerHTML = textoOriginal;
+        });
+    }
+
+    function deshabilitarTarjeta(idRestaurante, bloquear) {
+        const tarjeta = document.getElementById(`card-${idRestaurante}`);
+        const boton = document.getElementById(`btn-${idRestaurante}`);
+        const radios = document.querySelectorAll(`input[name="voto_${idRestaurante}"]`);
+        const comentarioArea = document.getElementById(`comentario-${idRestaurante}`);
+
+        const esLocalDiferenteQR = localActivoQR && (idRestaurante !== localActivoQR);
+
+        if (bloquear) {
+            tarjeta.classList.add('votada');
+            radios.forEach(radio => radio.disabled = true);
+            if (comentarioArea) comentarioArea.disabled = true;
+            boton.disabled = true;
+            boton.innerText = '✅ Calificación Registrada';
+        } else if (esLocalDiferenteQR) {
+            tarjeta.classList.add('bloqueada-qr');
+            radios.forEach(radio => radio.disabled = true);
+            if (comentarioArea) comentarioArea.disabled = true;
+            boton.disabled = true;
+            boton.innerText = `🔒 Requiere QR de ${RESTAURANTES_NOMBRES[idRestaurante]}`;
+        } else {
+            tarjeta.classList.remove('votada', 'bloqueada-qr');
+            radios.forEach(radio => radio.disabled = false);
+            if (comentarioArea) comentarioArea.disabled = false;
+            boton.disabled = false;
+            const nombreDisplay = RESTAURANTES_NOMBRES[idRestaurante] || idRestaurante;
+            boton.innerText = `Calificar ${nombreDisplay}`;
+        }
+    }
+
+    function actualizarProgreso() {
+        const textDisplay = document.getElementById('progressCountText');
+        const fillBar = document.getElementById('progressBarFill');
+        if (textDisplay && fillBar) {
+            textDisplay.innerText = `${votosRealizadosCount} / ${RESTAURANTES_TOTAL}`;
+            const percentage = Math.min(100, Math.round((votosRealizadosCount / RESTAURANTES_TOTAL) * 100));
+            fillBar.style.width = `${percentage}%`;
+        }
+    }
+
+    function resetearCedula() {
+        const cedulaInput = document.getElementById('cedula');
+        cedulaInput.disabled = false;
+        cedulaInput.value = '';
+        cedulaInput.focus();
+
+        document.getElementById('btnVerificar').style.display = 'inline-flex';
+        document.getElementById('btnResetCedula').style.display = 'none';
+        document.getElementById('listaRestaurantes').classList.remove('activa');
+        document.getElementById('progressCard').style.display = 'none';
+        document.getElementById('mainWrapper').classList.remove('expanded');
+
+        ['tacabron', 'amoroto', 'crepes', 'hamburgo'].forEach(id => {
+            const labelDisplay = document.getElementById(`label-${id}`);
+            if (labelDisplay) labelDisplay.innerText = 'Selecciona una nota';
+            document.querySelectorAll(`input[name="voto_${id}"]`).forEach(r => { r.checked = false; r.disabled = false; });
+            const comentarioArea = document.getElementById(`comentario-${id}`);
+            if (comentarioArea) { comentarioArea.value = ''; comentarioArea.disabled = false; }
+            deshabilitarTarjeta(id, false);
+        });
+
+        votosRealizadosCount = 0;
+        actualizarProgreso();
+        mostrarToast('ℹ️ Puedes ingresar una nueva cédula.', 'info');
+    }
+
+    function mostrarToast(mensaje, tipo = 'info') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast ${tipo}`;
+        let icon = tipo === 'exito' ? '🎉' : tipo === 'error' ? '⚠️' : 'ℹ️';
+        toast.innerHTML = `<span class="toast-icon">${icon}</span><div>${mensaje}</div>`;
+        container.appendChild(toast);
+        setTimeout(() => { toast.remove(); }, 4500);
+    }
+</script>
+</body>
+</html>
